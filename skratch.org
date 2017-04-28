@@ -1,0 +1,54 @@
+* SNP enhancer overlap
+  - Try epigenome readmap states
+  - perhaps use chromHMM data
+    - it is aggregated from a larger dataset
+* ASE
+  - Mail from Yang:
+    - Do simple binom analysis
+    - plot effect sizes and direction
+    - group by regulatory SNP zygosity:
+      - we should observe ASE effect with heterozygous SNP and none otherwise.
+      - doubtful about possibility for good results, but I will give it a go
+
+** ASE preprocessing (Castel et al 2015)
+   - The most difficult problem in AE analysis and a potential source of
+     false positive AE is ensuring that:
+     1. all the reads counted over a site indeed
+        originate from that genomic locus
+     2. all reads from that locus are counted.
+        RNA-seq studies with shorter or single-end
+        RNA-seq reads are more susceptible to these problems.
+   - we suggest that removing duplicate reads is a good
+     default approach for AE
+   - only uniquely mapping reads should be used.
+     This implies that highly homologous loci -
+     such as microRNAs—are not amenable to AE analysis.
+   - difficult caveat in AE analysis is allelic mapping bias:
+     - in RNA-seq data aligned to the reference genome,
+       a read carrying the alternative allele of a variant
+       has at least one mismatch, and thus has a lower probability
+       to align correctly than the reference reads
+   - Various strategies can be employed to control for
+     the effect of mapping bias on AE analysis.
+     - The simplest approach that can be applied to AE data without
+       realignment is to filter sites with likely bias.
+   - unless mentioned otherwise,
+     we remove about 20 % of het- SNPs that either fall within regions
+     of low mappability (ENCODE 50 bp mappability score < 1) or
+     show map- ping bias in simulations [27]
+   - but the genome-wide reference ratio remaining slightly above 0.5
+     indicates residual bias
+   - Using this ratio as a null in statistical tests instead of 0.5 [5, 6]
+     can improve results
+
+* Progress Plan
+** Script 1: preprocessing
+  - [X] Filter all genes to subset close to rSNP (+-500kb)
+    - [X] Check for duplicate genes (e.g. same gene close to two tag SNPs)
+  - [X] Find all SNPs in coding regions of a gene
+  - [X] Filter coding SNPs by mappability
+** Script 2: compute 
+  - [ ] Map name from Yang list, bam files and genotype files
+  - [ ] Run GATK ASECount with quite conservative values
+  - [ ] Do significance testing
+
