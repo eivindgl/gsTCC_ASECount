@@ -32,7 +32,6 @@ class Sample:
 
 samples = list()
 with open('input_data/yang_sample_names.txt') as f:
-    f.readline() # skip header
     for line in f:
         x = line.strip().split()[-1].strip('"')
         y = Sample.parse_string(x)
