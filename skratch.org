@@ -48,7 +48,14 @@
   - [X] Find all SNPs in coding regions of a gene
   - [X] Filter coding SNPs by mappability
 ** Script 2: compute 
-  - [ ] Map name from Yang list, bam files and genotype files
-  - [ ] Run GATK ASECount with quite conservative values
-  - [ ] Do significance testing
-
+  - [X] Map name from Yang list, bam files and genotype files
+  - [X] Run GATK ASECount with quite conservative values
+** Script 3: post process
+   - [X] Keep only heterozygous SNPs per sample fs
+** Script 4: test
+  - [X] Do significance testing
+** Script 5: merge and explore
+   - [X] merge significant results across samples
+   - [ ] How are ASE effects on same SNP/gene related?
+     - [ ] Do they cluster within donors?
+     - [ ] Are they specific to any timepoints?
