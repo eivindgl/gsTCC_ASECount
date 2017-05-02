@@ -77,12 +77,13 @@ df %>%
   dplyr::select(SNP=variantID, donor, sample, gene_id, gene_name, timepoint) %>% 
   inner_join(gene_tag_snp_map) %>% 
   inner_join(gtdf) %>% 
+  distinct(gene_id,gene_name, donor, category) %>% 
   group_by(gene_id, gene_name) %>% 
   summarize(het = sum(category == 'heterozygous'),
             hom = sum(category == 'homozygous'),
             het_frac = het / (het + hom),
             hom_frac = hom / (het + hom)) %>% 
-  arrange(desc(het_frac))
-  # ggplot() +
-  # geom_point(aes(het, hom))
+  arrange(desc(het + hom)) %>% 
+  ggplot() +
+  geom_jitter(aes(het, hom))
 

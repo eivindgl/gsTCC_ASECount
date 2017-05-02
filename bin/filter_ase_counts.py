@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
+'''
+This scripts filters all heterozygous coding SNPs for a given donor.
+Input counts.csv is a list of counts for all relevant coding SNPs.
+However, for each donor, only heterozygous coding SNPs are relevant when measuring ASE effects.
+'''
 import sys
 import vcf
 import argparse
 import pandas as pd
 
 def parse_args(argv):
-    p = argparse.ArgumentParser()
+    p = argparse.ArgumentParser(description='This scripts filters all heterozygous coding SNPs for a given donor.')
     p.add_argument('--vcf', required = True)
     p.add_argument('--counts', required = True)
     p.add_argument('-n', '--genotype-name', required = True)
@@ -28,7 +33,6 @@ def parse_counts(tsv_path):
 
 def main(args):
     vcf = parse_vcf(args.vcf, is_compressed=args.vcf.endswith('gz'))
-    genotype_names = vcf.samples
     snps = list(vcf)
 
     het_snps = get_het_snps(snps, args.genotype_name)

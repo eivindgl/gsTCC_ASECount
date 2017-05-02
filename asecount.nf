@@ -1,6 +1,27 @@
 #!/usr/bin/env nextflow
 import java.nio.file.Paths
 
+# TODO add all calculon specific code here
+
+rna_snps_all = file('tmp_input_data/gsTCC.RNA.all.vcf.gz')
+
+process filter_SNPs_from_RNA_genotypes {
+  module  'GATK'
+  input:
+    file rna_snps_all
+  output:
+    file 'gsTCC.RNA.SNPs.vcf.gz' into rna_snps_ch
+    """
+    java -Xmx2g -jar ${EBROOTGATK}/GenomeAnalysisTK.jar -T SelectVariants \
+	-R "$params.genome_ref" \
+	-V "$rna_snps_all" \
+	-selectType SNP \
+	-o gsTCC.RNA.SNPs.vcf.gz
+
+    """
+}
+
+
 Channel
   .fromPath('tmp_data/run_meta.csv')
   .splitCsv(header: true)
@@ -38,45 +59,6 @@ process ASECount {
      --minMappingQuality 10
     """
 }
-
-process filter_ASE_counts {
-  publishDir "out/filtered_ase_counts", mode: 'copy'
-  input:
-    file vcf from coding_snps
-    file vcf_idx from coding_snps_idx
-    set sample_name, genotype_name, counts from ase_counts_ch
-  output:
-    set sample_name, genotype_name, "${sample_name}.csv" into filtered_ase_counts_ch
-    """
-    filter_ase_counts.py --vcf $vcf --counts $counts -n $genotype_name -o "${sample_name}.csv"
-    """
-}
-
-process test_ASE_counts {
-  publishDir "out/sig_ase", mode: 'copy'
-  input:
-    set sample_name, genotype_name, filtered_counts from filtered_ase_counts_ch
-  output:
-    set sample_name, genotype_name, "${sample_name}.csv" into sig_ase_counts_ch
-    """
-    ase_binom_test.R -p 1e-2 -l 20 $filtered_counts -s $sample_name -d $genotype_name "${sample_name}.csv"
-    """
-}
-
-snp_gene_map = file('tmp_data/snp_gene_map.tsv')
-process combine_significant_ASE {
-  publishDir "out", mode: 'copy'
-  input:
-    file csv_files from sig_ase_counts_ch.map{ it[2] }.toSortedList() 
-    file snp_gene_map
-  output:
-    file 'sig_ASE_effects.csv' into sig_ASE_ch
-    """
-    merge_and_annotate_ASE_results.R sig_ASE_effects.csv $snp_gene_map $csv_files 
-    """
-}
-
-sig_ASE = sig_ASE_ch.first()
 
 
 

@@ -1,6 +1,6 @@
 set -u
 set -e
-dstd=tmp_input_data
+dstd=tmp_data
 mkdir -p "$dstd"
 while read url ; do
     filename=$( echo "$url" | perl -MURI -le 'chomp($url = <>); print URI->new($url)->path')
