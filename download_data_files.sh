@@ -1,4 +1,16 @@
-mkdir tmp_data
-cd tmp_data
-wget ftp://jungle.unige.ch/Allelic_map_bias/single_end_genome_based_BWA/EUR01_50bp_result_stats_05bias.txt
-wget ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.annotation.gff3.gz
+set -u
+set -e
+dstd=tmp_input_data
+mkdir -p "$dstd"
+while read url ; do
+    filename=$( echo "$url" | perl -MURI -le 'chomp($url = <>); print URI->new($url)->path')
+    filename=$(basename "$filename")
+    storage_path="$dstd/$filename"
+    if [ -f $storage_path ] ; then
+        echo "File exists. Skipping $storage_path"
+    else
+        echo "Downloading $storage_path"
+        curl -o "$storage_path" "$url"
+    fi
+done < external_input_data.txt
+

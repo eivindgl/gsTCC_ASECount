@@ -1,0 +1,6 @@
+ftp://jungle.unige.ch/Allelic_map_bias/single_end_genome_based_BWA/EUR01_50bp_result_stats_05bias.txt
+ftp://ftp.sanger.ac.uk/pub/gencode/Gencode_human/release_26/GRCh37_mapping/gencode.v26lift37.annotation.gff3.gz
+https://www.dropbox.com/s/dyntbko0a7bn0wq/gsTCC.RNA.all.vcf.gz?dl=0
+https://www.dropbox.com/s/u21xfkk7a2nzvf6/gsTCC.RNA.all.vcf.gz.tbi?dl=0
+https://www.dropbox.com/s/m1ht3neaoathwux/gsTCC.IChip.all.vcf.gz.tbi?dl=0
+https://www.dropbox.com/s/dauwpsj2bbk7eet/gsTCC.IChip.all.vcf.gz?dl=0
