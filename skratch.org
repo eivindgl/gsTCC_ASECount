@@ -56,6 +56,9 @@
   - [X] Do significance testing
 ** Script 5: merge and explore
    - [X] merge significant results across samples
-   - [ ] How are ASE effects on same SNP/gene related?
-     - [ ] Do they cluster within donors?
-     - [ ] Are they specific to any timepoints?
+   - [X] How are ASE effects on same SNP/gene related?
+     - [X] Do they cluster within donors?
+     - [X] Are they specific to any timepoints?
+       - At least IRF4, but hard to tell because I detect so few.
+     - [ ] Group these results by the heterozygozity of the regulatory SNP
+

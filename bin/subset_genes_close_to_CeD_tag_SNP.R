@@ -12,9 +12,27 @@ pacman::p_load(
 
 gene_annotation <- import('tmp_data/gencode.v26lift37.annotation.gff3.gz')
 tag_snps <- import('input_data/CeD_tag_SNPs.bed')
+# Skip CeD tag SNPs not covered by immunochip
+ichip_coverage <- !tag_snps$name %in% c('rs12998748', 'rs13397', 'rs62323881')
+tag_snps <- tag_snps[ichip_coverage]
 hits <- tag_snps %>% 
   flank(5e5, both = TRUE) %>% 
   findOverlaps(gene_annotation)
+
+gene_idx <- gene_annotation[to(hits)] %>%
+  mcols %>% 
+  as.data.frame() %>% 
+  `[[`('type') %>% 
+  `==`('gene') %>% 
+  which()
+x <- unlist(gene_annotation[to(hits)][gene_idx, ])
+gene_tag_snp_map <- tibble(
+  gene_id = x$ID,
+  gene_name = x$gene_name,
+  tag_snp = tag_snps[from(hits)[gene_idx]]$name)
+gene_tag_snp_map %>% 
+  write_csv('tmp_data/gene_tag_snp_map.csv')
+
 # a verbose way of finding overlapping genes
 overlapping_genes <- gene_annotation[to(hits)] %>%
   mcols %>% 

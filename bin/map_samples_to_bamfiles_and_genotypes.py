@@ -1,5 +1,5 @@
 import collections
-import regex
+import re
 
 class Sample:
 
@@ -26,7 +26,7 @@ class Sample:
 
     @classmethod
     def parse_string(cls, sample_name):
-        x = regex.match(r'(.*)__TCC\.(\d+)\.(\d+)__(.+)', sample_name).groups()
+        x = re.match(r'(.*)__TCC\.(\d+)\.(\d+)__(.+)', sample_name).groups()
         return cls(*x, sample_name = sample_name)
 
 

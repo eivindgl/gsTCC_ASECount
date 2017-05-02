@@ -1,0 +1,12 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.nextflow*
+input_data/gsTCC*.vcf.gz*
+.idea/
+__pycache__/
+out/
+tmp_data/
+work/
+gsTCC_ASECount.Rproj
