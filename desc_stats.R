@@ -72,7 +72,7 @@ gtdf <- read_csv('tmp_data/tag_snp_genotype.csv')%>%
 gene_tag_snp_map <- read_csv('tmp_data/gene_tag_snp_map.csv')
 
 top_N_genes <- gdf$gene_id %>% head(n = 40)
-df %>% 
+het_df <- df %>% 
   filter(gene_id %in% top_N_genes) %>% 
   dplyr::select(SNP=variantID, donor, sample, gene_id, gene_name, timepoint) %>% 
   inner_join(gene_tag_snp_map) %>% 
@@ -83,7 +83,8 @@ df %>%
             hom = sum(category == 'homozygous'),
             het_frac = het / (het + hom),
             hom_frac = hom / (het + hom)) %>% 
-  arrange(desc(het + hom)) %>% 
+  arrange(desc(het + hom))
+het_df %>% 
   ggplot() +
   geom_jitter(aes(het, hom))
 

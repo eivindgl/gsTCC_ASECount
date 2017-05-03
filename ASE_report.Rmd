@@ -1,0 +1,144 @@
+---
+title: "gsTCC ASE analysis"
+author: "Eivind Lund"
+date: "May 2, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(
+  tidyverse
+)
+```
+
+## Introduction
+
+I followed [(Castel et al 2015)](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-015-0762-6) for best practices for data preprocessing prior to ASE analysis.
+I used the [GATK ASEReadCounter](https://software.broadinstitute.org/gatk/documentation/tooldocs/current/org_broadinstitute_gatk_tools_walkers_rnaseq_ASEReadCounter.php) for the actual counting. Lastly, I used a simple binomial test and FDR correction for significance testing. I only tested SNPs in coding regions of genes +-500kb of celiac disease risk loci tag SNPs. The code used to run the analysis is available on [github](https://github.com/eivindgl/gsTCC_ASECount).
+
+## Results
+```{r include=FALSE, cache=TRUE}
+num_cis_genes <- read_csv('tmp_data/gene_tag_snp_map.csv') %>% 
+  distinct(gene_name) %>% 
+  nrow()
+
+all_snps <- local({
+  zf <- read_csv('out_ase/ASE_effects_full.csv') 
+  
+  num_tot_snps <- zf %>% 
+    distinct(variantID) %>% 
+    nrow()
+  
+  num_snps_per_sample <- zf %>%
+    group_by(sample) %>% 
+    summarize(nSNP=length(unique(variantID))) %>% 
+    arrange(desc(nSNP)) %>% 
+    `[[`('nSNP') 
+  
+  list(tot = num_tot_snps, per_sample = num_snps_per_sample)
+})
+```
+```{r include=FALSE}
+df <- read_csv('out_ase/ASE_effects.csv')
+tot_ASE_genes <- df %>% 
+  distinct() %>% 
+  nrow()
+
+multi_sample_ASE_genes <- df %>% 
+  group_by(gene_id) %>% 
+  count() %>% 
+  filter(n > 1) %>% 
+  nrow()
+
+multi_donor_ASE_genes <- df %>% 
+  distinct(gene_id, donor) %>% 
+  group_by(gene_id) %>% 
+  count() %>% 
+  filter(n > 1) %>% 
+  nrow()
+```
+
+There are `r num_cis_genes` cis genes with a total of `r all_snps$tot` coding SNPs that have above 30 reads and a heterozygous genotype in at least 1 sample. 
+On average, each sample has `r median(all_snps$per_sample)` testable coding SNPs.
+Only `r multi_sample_ASE_genes` genes have ASE effects in multiple samples.
+Furthermore, only `r multi_donor_ASE_genes` display an ASE effect in at least two different donors.
+
+```{r include=FALSE}
+gdf <- df %>% 
+  distinct(gene_id, donor, sample, timepoint) %>% 
+  group_by(gene_id, donor, timepoint) %>% 
+  summarize(ase = n() > 0) %>% 
+  ungroup() %>% 
+  group_by(gene_id, timepoint) %>% 
+  summarize(n = n()) %>% 
+  spread(timepoint, n, fill = 0)
+
+gdf <- gdf %>% 
+  gather(timepoint, n, -gene_id) %>% 
+  group_by(gene_id) %>% 
+  summarise(total = sum(n)) %>% 
+  inner_join(gdf) %>% 
+  arrange(desc(total))
+gtdf <- read_csv('tmp_data/tag_snp_genotype.csv')%>%
+  gather(donor, genotype, -SNP) %>% 
+  dplyr::rename(tag_snp = SNP) %>% 
+  mutate(category = if_else(genotype %in% c('A|A', 'C|C', 'G|G', 'T|T'),
+                            'homozygous', 'heterozygous'))
+gene_tag_snp_map <- read_csv('tmp_data/gene_tag_snp_map.csv')
+
+cgenes <- df %>% 
+  distinct(donor, gene_id) %>% 
+  group_by(gene_id) %>% 
+  filter(n() > 2) %>% 
+  ungroup() %>% 
+  distinct(gene_id) %>% 
+  `[[`('gene_id')
+length(cgenes)
+
+het_df <- df %>% 
+  filter(gene_id %in% cgenes) %>% 
+  dplyr::select(SNP, donor, sample, gene_id, gene_name, timepoint) %>% 
+  inner_join(gene_tag_snp_map) %>% 
+  inner_join(gtdf) %>% 
+  distinct(tag_snp, gene_id,gene_name, sample, category) %>% 
+  group_by(tag_snp, gene_id, gene_name) %>% 
+  summarize(het = sum(category == 'heterozygous'),
+            hom = sum(category == 'homozygous')) %>% 
+  mutate(tot = het + hom,
+         het_frac = het / (het + hom),
+         hom_frac = hom / (het + hom)) %>% 
+  arrange(desc(het_frac))
+```
+## Relationship with CeD tag SNP
+Grouping ASE effects by the cis tag SNP genotype is a simple method for identifying possible correlations.
+A few genes with ASE effects correlate with cis CeD tag-SNP heterozygosity.
+
+
+```{R echo=FALSE, message=FALSE}
+het_df %>% 
+  ggplot() +
+  geom_point(aes(hom, het)) +
+  coord_cartesian(ylim = c(0, 42), xlim = c(0, 42)) +
+  labs(y = 'Heterozygous CeD tag SNP',
+       x = 'Homozygous CeD tag SNP',
+       title = 'Number of ASE effects per gene plotted by genotype of sample donor',
+       subtitle = 'Top 40 genes with most ASE effects across samples visuallized',
+       caption = 'Each dot represents a gene. The axes indicate number of samples.'
+  )
+```
+
+The table below contain the ASE effects in genes that correlate with cis tag-SNP heterozygosity.
+As in the previous plot, the numbers represent number of samples with an ASE effect in a given gene and zygocity.
+
+
+```{r results='asis', echo=FALSE}
+het_df %>% 
+  filter(het_frac > 0.5) %>% 
+  arrange(desc(het_frac), desc(tot)) %>% 
+  dplyr::select(-het_frac, -hom_frac, -tot) %>% 
+  dplyr::rename(heterozygous_tag_SNP=het, homozygous_tag_SNP=hom) %>% 
+  knitr::kable(caption = 'the numbers represent number of samples with an ASE effect in a given gene and zygocity')
+```
+
+
