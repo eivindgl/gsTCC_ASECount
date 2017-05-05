@@ -2,7 +2,12 @@
 title: "gsTCC ASE analysis"
 author: "Eivind Lund"
 date: "May 2, 2017"
-output: html_document
+  output:
+  pdf_document: 
+    latex_engine: xelatex
+  html_document: default
+urlcolor: blue
+linkcolor: blue
 ---
 
 ```{r setup, include=FALSE}
@@ -128,17 +133,20 @@ het_df %>%
   )
 ```
 
-The table below contain the ASE effects in genes that correlate with cis tag-SNP heterozygosity.
-As in the previous plot, the numbers represent number of samples with an ASE effect in a given gene and zygocity.
+The table below contain the ASE effects in genes that possibly correlates with cis tag-SNP heterozygosity.
+As in the previous plot, the numbers represent number of samples with an ASE effect in a given gene grouped by tag-SNP zygocity.
 
 
 ```{r results='asis', echo=FALSE}
-het_df %>% 
+potentially_ASE_by_tag_SNP <- het_df %>% 
   filter(het_frac > 0.5) %>% 
   arrange(desc(het_frac), desc(tot)) %>% 
   dplyr::select(-het_frac, -hom_frac, -tot) %>% 
-  dplyr::rename(heterozygous_tag_SNP=het, homozygous_tag_SNP=hom) %>% 
-  knitr::kable(caption = 'the numbers represent number of samples with an ASE effect in a given gene and zygocity')
+  dplyr::rename(heterozygous_tag_SNP=het, homozygous_tag_SNP=hom)
+potentially_ASE_by_tag_SNP %>%
+  write_csv('potential_ASE_by_tag_snp.csv')
+potentially_ASE_by_tag_SNP %>% 
+  knitr::kable()
 ```
 
 
